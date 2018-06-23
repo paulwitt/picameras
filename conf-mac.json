@@ -1,0 +1,13 @@
+{
+	"show_video": true,
+	"camera_warmup_time": 2.5,
+	"delta_thresh": 5,
+	"resolution": [640, 360],
+    "fps": 15.0,
+    "codec": "mp4v",
+	"min_area": 5000,
+    "draw_boxes": true,
+    "minimum_video_length": 10,
+    "basepath": "/Users/907631/dev-git/cameras/output",
+    "ext": ".mov"
+}
