@@ -7,6 +7,6 @@
     "min_area": 5000,
     "draw_boxes": true,
     "minimum_video_length": 10,
-    "basepath": "~/camera/output",
+    "basepath": "/mnt/nfs/downloads/camera",
     "ext": ".avi"
 }
