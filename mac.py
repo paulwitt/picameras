@@ -32,6 +32,31 @@ def get_path(basePath, ext, timestamp):
     # construct the file path
     return "{}/{}{}".format(basePath, timestamp.strftime("%A %d %B %Y %I-%M-%S%p"), ext)
 
+def get_fps(vs):
+    # Number of frames to capture
+    num_frames = 120
+
+    LOG.info("Capturing {} frames to calculate fps.".format(num_frames))
+
+    # Start time
+    start = time.time()
+
+    # Grab a few frames
+    for i in range(0, num_frames):
+        ret, frame = vs.read()
+
+    # End time
+    end = time.time()
+
+    # Time elapsed
+    seconds = end - start
+    print("Time taken : {} seconds".format(seconds))
+
+    # Calculate frames per second
+    fps  = num_frames / seconds
+    print("Estimated frames per second : {}".format(fps))
+    return fps
+
 
 def main():
     """ Main """
@@ -49,10 +74,13 @@ def main():
     # initialize the average frame, last uploaded timestamp,
     # and frame motion counter
     LOG.info("Initializing the video stream...")
-    #vs = VideoStream(src=0).start()
     vs = cv2.VideoCapture(0)
+    
     LOG.info("Warming up the camera...")
     time.sleep(conf["camera_warmup_time"])
+
+    fps = get_fps(vs)
+
     avg = None
     lastUploaded = datetime.now()
 
@@ -60,8 +88,7 @@ def main():
     fourcc = cv2.VideoWriter_fourcc(*'{}'.format(conf["codec"]))
     width = conf["resolution"][0]
     height = conf["resolution"][1]
-    fps = conf["fps"]
-    LOG.info("Recording using the {} codec at {}x{} and {} fps".format(conf["codec"], width, height, fps))
+    LOG.info("Recording using the {} codec at {}x{} and {} fps".format(conf["codec"], width, height, round(fps, 2)))
     size = (width, height)
     out = None
 
