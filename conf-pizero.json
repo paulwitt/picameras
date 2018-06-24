@@ -1,5 +1,5 @@
 {
-	"show_video": true,
+	"show_video": false,
 	"camera_warmup_time": 2.5,
 	"delta_thresh": 5,
 	"resolution": [640, 480],
@@ -8,6 +8,6 @@
 	"min_area": 5000,
     "draw_boxes": true,
     "minimum_video_length": 10,
-    "basepath": "/Users/907631/dev-git/cameras/output",
-    "ext": ".mov"
+    "basepath": "~/camera/output",
+    "ext": ".avi"
 }
