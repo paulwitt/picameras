@@ -67,7 +67,6 @@ def main():
     fps = conf["fps"]
     LOG.info("Recording using the {} codec at {}x{} and {} fps".format(conf["codec"], width, height, fps))
     size = (width, height)
-    out = None
 
     # Initialize the window
     if conf["show_video"]:
@@ -126,15 +125,11 @@ def main():
                     text = "Occupied"
                     video_start = datetime.now()
                     filename = get_path(conf['basepath'], conf['ext'], timestamp)
-
-                    if out:
-                        out.release()
-                        out = None
-
-                    out = cv2.VideoWriter(filename, fourcc, fps, size)
+                    camera.start_recording(filename)
 
             # draw the text and timestamp on the frame
             ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
+            camera.annotate_text = ts
             cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
             if video_start:
@@ -143,15 +138,14 @@ def main():
                 else:
                     in_window = False
 
-            # check to see if the room is occupied
-            if text == "Occupied":
-                out.write(frame)
-
             if not cnts and not in_window:
                 text = "Unoccupied"
 
             if not in_window:
                 video_start = None
+
+            if not video_start and text == "Unoccupied" and camera.recording:
+                camera.stop_recording()
 
             # check to see if the frames should be displayed to screen
             if conf["show_video"]:
@@ -168,9 +162,8 @@ def main():
         except KeyboardInterrupt:
             break
 
-    if out:
-        out.release()
-    out = None
+    if camera.recording:
+        camera.stop_recording()
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
