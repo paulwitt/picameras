@@ -52,6 +52,7 @@ def main():
     camera = PiCamera()
     camera.resolution = tuple(conf["resolution"])
     camera.framerate = conf["fps"]
+    camera.video_stabilization = True
     rawCapture = PiRGBArray(camera, size=tuple(conf["resolution"]))
 
     LOG.info("Warming up the camera...")
@@ -67,11 +68,6 @@ def main():
     fps = conf["fps"]
     LOG.info("Recording using the {} codec at {}x{} and {} fps".format(conf["codec"], width, height, fps))
     size = (width, height)
-
-    # Initialize the window
-    if conf["show_video"]:
-        cv2.namedWindow('Security Feed', cv2.WINDOW_NORMAL)
-        #cv2.moveWindow('Security Feed', 0, 0)
 
     # capture frames from the camera
     for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):

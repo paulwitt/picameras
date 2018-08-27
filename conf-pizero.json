@@ -1,13 +1,16 @@
 {
-    "show_video": false,
     "camera_warmup_time": 2.5,
     "delta_thresh": 5,
     "resolution": [640, 480],
-    "fps": 30.0,
-    "codec": "mp4v",
     "min_area": 5000,
     "draw_boxes": false,
-    "minimum_video_length": 10,
-    "basepath": "/mnt/nfs/downloads/camera",
-    "ext": ".h264"
+    "basepath": "localfolderpath",
+    "s3bucket": "yours3bucket",
+    "s3folder": "yours3folder",
+    "baseimageurl": "yourbucketandfolderpath",
+    "fileext": ".jpg",
+    "http_port": 8080,
+    "device_index": 1,
+    "polling_freq": 0,
+    "debug": false
 }
