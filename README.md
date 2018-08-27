@@ -10,15 +10,15 @@ The SmartApp and Device Handlers work together to provide integration to the Sma
 
 ## About
 Got the idea for this project from this posting:
-https://www.hackster.io/juano2310/computer-vision-as-motion-sensor-for-smartthings-803341
+* https://www.hackster.io/juano2310/computer-vision-as-motion-sensor-for-smartthings-803341
 
 But it doesn't work.  So I tracked down what I'm pretty sure is the repo that gave him the idea:
-https://github.com/rllynch/pi_garage_smartthings
+* https://github.com/rllynch/pi_garage_smartthings
 
 So I combined the two and started going through tutorials so their code would make more sense.  Links:
-https://docs.smartthings.com/en/latest/cloud-and-lan-connected-device-types-developers-guide/working-with-images.html
-https://www.pyimagesearch.com/2015/05/25/basic-motion-detection-and-tracking-with-python-and-opencv/
-https://www.pyimagesearch.com/2015/06/01/home-surveillance-and-motion-detection-with-the-raspberry-pi-python-and-opencv/
+* https://docs.smartthings.com/en/latest/cloud-and-lan-connected-device-types-developers-guide/working-with-images.html
+* https://www.pyimagesearch.com/2015/05/25/basic-motion-detection-and-tracking-with-python-and-opencv/
+* https://www.pyimagesearch.com/2015/06/01/home-surveillance-and-motion-detection-with-the-raspberry-pi-python-and-opencv/
 
 ## How-to (at least how I did it)
 Needed:
