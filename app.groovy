@@ -124,7 +124,7 @@ def installed() {
     state.subscribe = false
     log.info "Installed with settings: ${settings}"
 
-	def hub = location.hubs[0]
+    def hub = location.hubs[0]
 
     log.info "id: ${hub.id}"
     log.info "zigbeeId: ${hub.zigbeeId}"
@@ -142,14 +142,14 @@ def installed() {
     log.info "localIP: ${localIP}"
     log.info "localSrvPortTCP: ${localSrvPortTCP}"
 
-	initialize()
+    initialize()
 }
 
 def updated() {
     log.debug "Updated with settings: ${settings}"
     unsubscribe()
     initialize()
-	def hub = location.hubs[0]
+    def hub = location.hubs[0]
 
     log.info "id: ${hub.id}"
     log.info "zigbeeId: ${hub.zigbeeId}"

@@ -14,36 +14,36 @@
  *
  */
 metadata {
-	definition (name: "RPi Security Camera", namespace: "rpi_camera", author: "Paul Witt") {
-		capability "Motion Sensor"
+    definition (name: "RPi Security Camera", namespace: "rpi_camera", author: "Paul Witt") {
+        capability "Motion Sensor"
         capability "Image Capture"
-		capability "Sensor"
+        capability "Sensor"
         capability "Refresh"
         command "subscribe"
-	}
+    }
 
-	simulator {
-		status "active": "motion: 1"
-		status "inactive": "motion: 0"
-	}
+    simulator {
+        status "active": "motion: 1"
+        status "inactive": "motion: 0"
+    }
 
-	tiles(scale: 2) {
+    tiles(scale: 2) {
         multiAttributeTile(name:"motion", type: "generic", width: 6, height: 4){
-			tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
-				attributeState "active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#53a7c0"
-				attributeState "inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff"
-			}
-		}
+            tileAttribute ("device.motion", key: "PRIMARY_CONTROL") {
+                attributeState "active", label:'motion', icon:"st.motion.motion.active", backgroundColor:"#53a7c0"
+                attributeState "inactive", label:'no motion', icon:"st.motion.motion.inactive", backgroundColor:"#ffffff"
+            }
+        }
 
         carouselTile("cameraDetails", "device.image", width: 4, height: 3) { }
 
         standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
-		}
+            state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+        }
 
         main "motion"
         details (["motion", "cameraDetails", "refresh"])
-	}
+    }
 }
 
 // parse events into attributes
