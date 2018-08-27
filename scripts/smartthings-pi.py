@@ -412,7 +412,7 @@ def main():
 
     subscription_list = {}
     camera_status = {'last_state': 'inactive'}
-    camera_image = {'last_image': '/raspicameras/front/blank.jpg'}
+    camera_image = {'last_image': conf["blankimage"]}
 
     # SSDP server to handle discovery
     SSDPServer(status_port=conf["http_port"], device_target=device_target)

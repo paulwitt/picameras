@@ -8,6 +8,7 @@
     "s3bucket": "yours3bucket",
     "s3folder": "yours3folder",
     "baseimageurl": "yourbucketandfolderpath",
+    "blankimage": "yourblankimagewithpath.jpg",
     "fileext": ".jpg",
     "http_port": 8080,
     "device_index": 1,

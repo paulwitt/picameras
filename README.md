@@ -47,13 +47,14 @@ Install on your Pi:
 * Copy the 'conf-pizero.json' and 'smartthings-pi.py' file into that folder (use wget from this repo)
 * Set the python script to executable
 * Add this to your /etc/rc.local file: (sleep 10;python3 /home/pi/camera/smartthings-pi.py --conf /home/pi/camera/conf-pizero.json)&
-* Update the conf-pizero.json file with the 'basepath', 's3bucket', 's3folder', and 'baseimageurl' for your local and s3 setup
+* Update the conf-pizero.json file with the 'basepath', 's3bucket', 's3folder', 'baseimageurl', and 'blankimage' for your local and s3 setup
 * Create and update /home/pi/.aws/config and /home/pi/.aws/credentials
 
 Notes:
 * This does log to /var/log/syslog
 * It will write images to 'basepath' whenever it sees motion.  This can be a lot of images.
 * It will write images to S3 when it goes from inactive (no motion) to active.  This is the image that will display in the mobile app.
+* The 'smartthings-mac.py' script (with 'conf-mac.json') can be used to test this on your mac laptop
 
 Known issues:
 * There's not enough error trapping around writing these files.
