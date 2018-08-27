@@ -1,8 +1,5 @@
 # RPi Security Cameras
-
-## RPi Security Cameras App
-This is the SmartThings user created SmartApp and Device handlers for Nest.
-The SmartApp and Device Handlers work together to provide integration to the SmartThings ecosystem using Nest's Official API.
+The SmartApp and Device Handlers work together to provide integration to the SmartThings ecosystem for a Raspberry Pi based security camera.
 
 ## Author
 * @paulwitt
