@@ -1,0 +1,44 @@
+{
+  "namespace": "paulwitt",
+  "repoOwner": "paulwitt",
+  "repoName": "cameras",
+  "repoBranch": "master",
+  "name": "RPi Security Cameras",
+  "author": "paulwitt",
+  "description": "Security cameras with motion detection using a Raspberry Pi.",
+  "category": "My Apps",
+  "bannerUrl": "https://www.raspberrypi.org/wp-content/uploads/2015/08/raspberry-pi-logo.png",
+  "docUrl": "",
+  "releaseType": "production",
+  "keywords": [
+    "camera",
+    "security",
+    "motion"
+  ],
+  "notes": "Nothing yet",
+  "smartApps": {
+    "parent": {
+      "name": "RPi Security Camera App",
+      "iconUrl": "https://www.raspberrypi.org/wp-content/uploads/2015/08/raspberry-pi-logo.png",
+      "published": true,
+      "oAuth": false,
+      "version": "0.1.0",
+      "appSettings": {
+          "clientId":"",
+          "clientSecret": "",
+          "devOpt": ""
+      },
+      "appUrl": "smartapps/app.groovy"
+    }
+  },
+  "deviceHandlers": [
+    {
+      "name": "RPi Security Camera Device",
+      "iconUrl": "https://www.raspberrypi.org/wp-content/uploads/2015/08/raspberry-pi-logo.png",
+      "published": true,
+      "version": "0.1.0",
+      "appUrl": "devicetypes/devicehandler.groovy",
+      "optional": false
+    }
+  ]
+}

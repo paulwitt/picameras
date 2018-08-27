@@ -2,7 +2,7 @@
 
 """ Raspberry Pi Security Camera for SmartThings
 
-Copyright 2018 Paul Witt <paul@bully-pulpit.com>
+Copyright 2018 Paul Witt <paulrwitt@gmail.com>
 
 Dependencies: python-twisted, cv2, pyimagesearch
 
@@ -16,11 +16,6 @@ Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
-"""
-
-"""
-This version is intended to run on a mac for testing. It should be able to
-be added to SmartThings when this script is running.
 """
 
 import argparse
@@ -38,6 +33,8 @@ from datetime import datetime, timedelta
 from time import time, sleep
 from botocore.exceptions import BotoCoreError, ClientError
 from imutils.video import VideoStream
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 from twisted.web import server, resource
 from twisted.internet import reactor
 from twisted.internet.defer import succeed
@@ -235,7 +232,11 @@ class MonitorCamera(object):
 
         # initialize the camera and grab a reference to the raw camera capture
         LOG.info("Initializing the video stream...")
-        self.camera = cv2.VideoCapture(0)
+        self.camera = PiCamera()
+        self.camera.resolution = tuple(conf["resolution"])
+        self.camera.framerate = 30.0
+        self.camera.video_stabilization = True
+        self.rawCapture = PiRGBArray(self.camera, size=tuple(conf["resolution"]))
 
         LOG.info("Warming up the camera...")
         sleep(conf["camera_warmup_time"])
@@ -246,9 +247,10 @@ class MonitorCamera(object):
     def check_state(self, current_state):
         self.current_state = current_state
         notify = False
+        self.camera.capture(self.rawCapture, format="bgr", use_video_port=True)
 
         # grab the raw NumPy array representing the image
-        ret, frame = self.camera.read()
+        frame = self.rawCapture.array
         timestamp = datetime.now()
 
         # resize the frame and convert it to grayscale
@@ -265,6 +267,7 @@ class MonitorCamera(object):
         # if the average frame is None, initialize it
         if self.avg is None:
             LOG.info("Starting background model...")
+            self.rawCapture.truncate(0)
             self.avg = gray.copy().astype("float")
 
         else:
@@ -283,12 +286,14 @@ class MonitorCamera(object):
 
             # draw the text and timestamp on the frame
             ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-            cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+            self.camera.annotate_text = ts
+            #cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
             # loop over the contours
             for c in cnts:
                 # if the contour is too small, ignore it
                 if cv2.contourArea(c) < self.min_area:
+                    self.rawCapture.truncate(0)
                     continue
 
                 if self.draw_boxes:
@@ -335,6 +340,7 @@ class MonitorCamera(object):
 
         # Schedule next check
         reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+        self.rawCapture.truncate(0)
 
     def get_path(self, basepath, fileext, timestamp):
         # construct the file path
@@ -402,6 +408,7 @@ def main():
         LOG.setLevel(logging.DEBUG)
 
     device_target = 'urn:schemas-upnp-org:device:RPi_Security_Camera:{}'.format(conf['device_index'])
+    LOG.info('device_target set to %s', device_target)
 
     subscription_list = {}
     camera_status = {'last_state': 'inactive'}

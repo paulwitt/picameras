@@ -1,7 +1,7 @@
 /**
  *  Raspberry Pi - Security Camera (SmartApp)
  *
- *  Copyright 2018 Paul Witt <paul@bully-pulpit.com>
+ *  Copyright 2018 Paul Witt <paulrwitt@gmail.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -15,8 +15,8 @@
  */
 
 definition(
-    name: "RPi Security Camera",
-    namespace: "rpi_camera",
+    name: "RPi Security Camera App",
+    namespace: "paulwitt",
     author: "Paul Witt",
     description: "Open source Security Camera using a Raspberry Pi and a PiCam",
     category: "SmartThings Labs",
@@ -80,7 +80,7 @@ def locationHandler(evt) {
         return ""
     }
 
-    log.debug('RPi Security Camera Received Response: ' + evt.description)
+    log.debug('RPi Security Camera App Received Response: ' + evt.description)
 
     def description = evt.description
     def hub = evt?.hubId
@@ -182,7 +182,7 @@ def initialize() {
             def ip = devices[ssdpUSN].ip
             def port = devices[ssdpUSN].port
             log.debug("Adding ${dni} for ${ssdpUSN} / ${ip}:${port}")
-            d = addChildDevice("rpi_camera", "RPi Security Camera", dni, devices[ssdpUSN].hub, [
+            d = addChildDevice("paulwitt", "RPi Security Camera Device", dni, devices[ssdpUSN].hub, [
                 "label": "RasPi Security Camera",
                 "data": [
                     "ip": ip,

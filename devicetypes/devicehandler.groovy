@@ -1,7 +1,7 @@
 /**
  *  Raspberry Pi - Security Camera (Device Handler)
  *
- *  Copyright 2018 Paul Witt <paul@bully-pulpit.com>
+ *  Copyright 2018 Paul Witt <paulrwitt@gmail.com>
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -14,7 +14,7 @@
  *
  */
 metadata {
-    definition (name: "RPi Security Camera", namespace: "rpi_camera", author: "Paul Witt") {
+    definition (name: "RPi Security Camera Device", namespace: "paulwitt", author: "Paul Witt") {
         capability "Motion Sensor"
         capability "Image Capture"
         capability "Sensor"
