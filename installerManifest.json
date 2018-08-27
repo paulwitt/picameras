@@ -28,7 +28,7 @@
           "clientSecret": "",
           "devOpt": ""
       },
-      "appUrl": "smartapps/app.groovy"
+      "appUrl": "smartapps/paulwitt/rpi-security-camera-app.src/rpi-security-camera-app.groovy"
     }
   },
   "deviceHandlers": [
@@ -37,7 +37,7 @@
       "iconUrl": "https://www.raspberrypi.org/wp-content/uploads/2015/08/raspberry-pi-logo.png",
       "published": true,
       "version": "0.1.0",
-      "appUrl": "devicetypes/devicehandler.groovy",
+      "appUrl": "devicetypes/paulwitt/rpi-security-camera-device.src/rpi-security-camera-device.groovy",
       "optional": false
     }
   ]
