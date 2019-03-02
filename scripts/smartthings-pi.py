@@ -59,7 +59,7 @@ SEARCH_RESPONSE = 'HTTP/1.1 200 OK\r\nCACHE-CONTROL:max-age=30\r\nEXT:\r\nLOCATI
 try:
     SESSION = boto3.session.Session()
     S3 = SESSION.resource('s3')
-except (BotoCoreError, ClientError) as error:
+except:
     LOG.error("ERROR: Unable to create AWS S3 resource, AWS returned an error.")
 
 
