@@ -349,41 +349,41 @@ class MonitorCamera(object):
                     self.camera_status['last_state'] = current_state
                     notify = True
 
-                # no contours found - we're now inactive
-                if not cnts and current_state == "active":
-                    current_state = "inactive"
-                    LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
-                    self.camera_status['last_state'] = current_state
-                    notify = True
+            # no contours found - we're now inactive
+            if not cnts and current_state == "active":
+                current_state = "inactive"
+                LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
+                self.camera_status['last_state'] = current_state
+                notify = True
 
-                # write the frame image to disk
-                if current_state == "active":
-                    try:
-                        # write it locally first
-                        filename = self.get_path(self.basepath, self.fileext, timestamp)
-                        LOG.info("Writing %s", filename)
-                        cv2.imwrite(filename, frame)
-                    except:
-                        LOG.info("ERROR: Writing local file.")
-                        reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
-                        return
-
-                    if notify:
-                        try:
-                            # Now write it to S3 so our device handler can get to it
-                            s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
-                            LOG.info("Uploading %s to S3 in bucket %s with key %s", filename, self.s3bucket, s3filename)
-                            S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
-                        except (BotoCoreError, ClientError) as error:
-                            LOG.error("ERROR: Unable to upload file, AWS returned an error.")
-
-                        # This will be sent back to SmartThings
-                        imageurl = "/{}/{}".format(self.s3bucket, s3filename)
-                        LOG.info("Setting last_image to https://s3.amazonaws.com%s", imageurl)
-                        self.camera_image['last_image'] = imageurl
+            # write the frame image to disk
+            if current_state == "active":
+                try:
+                    # write it locally first
+                    filename = self.get_path(self.basepath, self.fileext, timestamp)
+                    LOG.info("Writing %s", filename)
+                    cv2.imwrite(filename, frame)
+                except:
+                    LOG.info("ERROR: Writing local file.")
+                    reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                    return
 
                 if notify:
-                    self.notify_hubs()
+                    try:
+                        # Now write it to S3 so our device handler can get to it
+                        s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
+                        LOG.info("Uploading %s to S3 in bucket %s with key %s", filename, self.s3bucket, s3filename)
+                        S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
+                    except (BotoCoreError, ClientError) as error:
+                        LOG.error("ERROR: Unable to upload file, AWS returned an error.")
+
+                    # This will be sent back to SmartThings
+                    imageurl = "/{}/{}".format(self.s3bucket, s3filename)
+                    LOG.info("Setting last_image to https://s3.amazonaws.com%s", imageurl)
+                    self.camera_image['last_image'] = imageurl
+
+            if notify:
+                self.notify_hubs()
 
         # Schedule next check
         reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
