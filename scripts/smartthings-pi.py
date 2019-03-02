@@ -292,37 +292,62 @@ class MonitorCamera(object):
             try:
                 cv2.accumulateWeighted(gray, self.avg, 0.5)
                 frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(self.avg))
+            except:
+                LOG.info("ERROR: Weighted/diff.")
+                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                return
 
+            try:
                 # threshold the delta image, dilate the thresholded image to fill
                 # in holes, then find contours on thresholded image
                 thresh = cv2.threshold(frameDelta, self.delta_thresh, 255, cv2.THRESH_BINARY)[1]
                 thresh = cv2.dilate(thresh, None, iterations=2)
                 cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+            except:
+                LOG.info("ERROR: Finding contours.")
+                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                return
 
+            try:
                 # draw the text and timestamp on the frame
                 ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
                 self.camera.annotate_text = ts
                 #cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+            except:
+                LOG.info("ERROR: Annotating text.")
+                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                return
 
-                # loop over the contours
-                for c in cnts:
-                    # if the contour is too small, ignore it
-                    if cv2.contourArea(c) < self.min_area:
+            # loop over the contours
+            for c in cnts:
+                # if the contour is too small, ignore it
+                if cv2.contourArea(c) < self.min_area:
+                    try:
                         self.rawCapture.truncate(0)
-                        continue
+                    except:
+                        LOG.info("ERROR: truncating after small contour.")
+                        reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                        return
 
-                    if self.draw_boxes:
+                    continue
+
+                if self.draw_boxes:
+                    try:
                         # compute the bounding box for the contour and draw it on the frame
                         (x, y, w, h) = cv2.boundingRect(c)
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    except:
+                        LOG.info("ERROR: Drawing boxes.")
+                        reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                        return
 
-                    # if we have a contour of the right size we're now actively detecting motion
-                    if current_state == "inactive":
-                        current_state = "active"
-                        LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
-                        self.camera_status['last_state'] = current_state
-                        notify = True
+                # if we have a contour of the right size we're now actively detecting motion
+                if current_state == "inactive":
+                    current_state = "active"
+                    LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
+                    self.camera_status['last_state'] = current_state
+                    notify = True
 
                 # no contours found - we're now inactive
                 if not cnts and current_state == "active":
@@ -333,13 +358,24 @@ class MonitorCamera(object):
 
                 # write the frame image to disk
                 if current_state == "active":
-                    # write it locally first
-                    filename = self.get_path(self.basepath, self.fileext, timestamp)
-                    cv2.imwrite(filename, frame)
+                    try:
+                        # write it locally first
+                        filename = self.get_path(self.basepath, self.fileext, timestamp)
+                        cv2.imwrite(filename, frame)
+                    except:
+                        LOG.info("ERROR: Writing local file.")
+                        reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                        return
 
                     if notify:
-                        # Now write it to S3 so our device handler can get to it
-                        s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
+                        try:
+                            # Now write it to S3 so our device handler can get to it
+                            s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
+                        except:
+                            LOG.info("ERROR: Getting S3 filename.")
+                            reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                            return
+
                         LOG.info("Uploading %s to S3 in bucket %s with key %s", filename, self.s3bucket, s3filename)
                         try:
                             S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
@@ -353,10 +389,6 @@ class MonitorCamera(object):
 
                 if notify:
                     self.notify_hubs()
-            except:
-                LOG.info("ERROR: State error.")
-                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
-                return
 
         # Schedule next check
         reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
