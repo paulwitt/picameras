@@ -12,6 +12,5 @@
     "fileext": ".jpg",
     "http_port": 8080,
     "device_index": 1,
-    "polling_freq": 0,
     "debug": false
 }

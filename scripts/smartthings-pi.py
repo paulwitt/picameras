@@ -216,6 +216,7 @@ class MonitorCamera(object):
         self.camera_image = camera_image
 
         self.avg = None
+        self.polling_freq = 0
         self.min_area = conf["min_area"]
         self.draw_boxes = conf["draw_boxes"]
         self.basepath = conf["basepath"]
@@ -224,7 +225,6 @@ class MonitorCamera(object):
         self.baseimageurl = conf["baseimageurl"]
         self.fileext = conf["fileext"]
         self.delta_thresh = conf["delta_thresh"]
-        self.polling_freq = conf["polling_freq"]
 
         # Define the video settings
         self.width = conf["resolution"][0]
@@ -397,7 +397,7 @@ class MonitorCamera(object):
 
     def get_path(self, basepath, fileext, timestamp):
         # construct the file path
-        return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
+        return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S-%f"), fileext)
 
     def notify_hubs(self):
         """Notify the subscribed SmartThings hubs that a state change has occurred"""
