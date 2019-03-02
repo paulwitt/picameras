@@ -376,6 +376,7 @@ class MonitorCamera(object):
                         S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
                     except (BotoCoreError, ClientError) as error:
                         LOG.error("ERROR: Unable to upload file, AWS returned an error.")
+                        LOG.info("%s", error)
 
                     # This will be sent back to SmartThings
                     imageurl = "/{}/{}".format(self.s3bucket, s3filename)
