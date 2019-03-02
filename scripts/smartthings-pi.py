@@ -250,7 +250,13 @@ class MonitorCamera(object):
         self.camera.capture(self.rawCapture, format="bgr", use_video_port=True)
 
         # grab the raw NumPy array representing the image
-        frame = self.rawCapture.array
+        try:
+            frame = self.rawCapture.array
+        except e:
+            LOG.info("ERROR: Frame capture threw an error.")
+            reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+            return
+
         timestamp = datetime.now()
 
         # resize the frame and convert it to grayscale
@@ -261,90 +267,110 @@ class MonitorCamera(object):
             reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
             return
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        try:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        except e:
+            LOG.info("ERROR: Color change or blur threw an error.")
+            reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+            return
 
         # if the average frame is None, initialize it
         if self.avg is None:
             LOG.info("Starting background model...")
-            self.rawCapture.truncate(0)
-            self.avg = gray.copy().astype("float")
-
+            try:
+                self.rawCapture.truncate(0)
+                self.avg = gray.copy().astype("float")
+            except e:
+                LOG.info("ERROR: Truncate threw an error.")
+                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                return
         else:
             # accumulate the weighted average between the current frame and
             # previous frames, then compute the difference between the current
             # frame and running average
-            cv2.accumulateWeighted(gray, self.avg, 0.5)
-            frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(self.avg))
+            try:
+                cv2.accumulateWeighted(gray, self.avg, 0.5)
+                frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(self.avg))
 
-            # threshold the delta image, dilate the thresholded image to fill
-            # in holes, then find contours on thresholded image
-            thresh = cv2.threshold(frameDelta, self.delta_thresh, 255, cv2.THRESH_BINARY)[1]
-            thresh = cv2.dilate(thresh, None, iterations=2)
-            cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+                # threshold the delta image, dilate the thresholded image to fill
+                # in holes, then find contours on thresholded image
+                thresh = cv2.threshold(frameDelta, self.delta_thresh, 255, cv2.THRESH_BINARY)[1]
+                thresh = cv2.dilate(thresh, None, iterations=2)
+                cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
-            # draw the text and timestamp on the frame
-            ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-            self.camera.annotate_text = ts
-            #cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+                # draw the text and timestamp on the frame
+                ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
+                self.camera.annotate_text = ts
+                #cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-            # loop over the contours
-            for c in cnts:
-                # if the contour is too small, ignore it
-                if cv2.contourArea(c) < self.min_area:
-                    self.rawCapture.truncate(0)
-                    continue
+                # loop over the contours
+                for c in cnts:
+                    # if the contour is too small, ignore it
+                    if cv2.contourArea(c) < self.min_area:
+                        self.rawCapture.truncate(0)
+                        continue
 
-                if self.draw_boxes:
-                    # compute the bounding box for the contour and draw it on the frame
-                    (x, y, w, h) = cv2.boundingRect(c)
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    if self.draw_boxes:
+                        # compute the bounding box for the contour and draw it on the frame
+                        (x, y, w, h) = cv2.boundingRect(c)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-                # if we have a contour of the right size we're now actively detecting motion
-                if current_state == "inactive":
-                    current_state = "active"
+                    # if we have a contour of the right size we're now actively detecting motion
+                    if current_state == "inactive":
+                        current_state = "active"
+                        LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
+                        self.camera_status['last_state'] = current_state
+                        notify = True
+
+                # no contours found - we're now inactive
+                if not cnts and current_state == "active":
+                    current_state = "inactive"
                     LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
                     self.camera_status['last_state'] = current_state
                     notify = True
 
-            # no contours found - we're now inactive
-            if not cnts and current_state == "active":
-                current_state = "inactive"
-                LOG.info('State changed from %s to %s', self.camera_status['last_state'], current_state)
-                self.camera_status['last_state'] = current_state
-                notify = True
+                # write the frame image to disk
+                if current_state == "active":
+                    # write it locally first
+                    filename = self.get_path(self.basepath, self.fileext, timestamp)
+                    cv2.imwrite(filename, frame)
 
-            # write the frame image to disk
-            if current_state == "active":
-                # write it locally first
-                filename = self.get_path(self.basepath, self.fileext, timestamp)
-                cv2.imwrite(filename, frame)
+                    if notify:
+                        # Now write it to S3 so our device handler can get to it
+                        s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
+                        LOG.info("Uploading %s to S3 in bucket %s with key %s", filename, self.s3bucket, s3filename)
+                        try:
+                            S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
+                        except (BotoCoreError, ClientError) as error:
+                            LOG.error("ERROR: Unable to upload file, AWS returned an error.")
+
+                        # This will be sent back to SmartThings
+                        imageurl = "/{}/{}".format(self.s3bucket, s3filename)
+                        LOG.info("Setting last_image to https://s3.amazonaws.com%s", imageurl)
+                        self.camera_image['last_image'] = imageurl
 
                 if notify:
-                    # Now write it to S3 so our device handler can get to it
-                    s3filename = self.get_path(self.s3folder, self.fileext, timestamp)
-                    LOG.info("Uploading %s to S3 in bucket %s with key %s", filename, self.s3bucket, s3filename)
-                    try:
-                        S3.meta.client.upload_file(filename, self.s3bucket, s3filename, ExtraArgs={'ACL': 'public-read', 'ContentType': 'image/jpeg'})
-                    except (BotoCoreError, ClientError) as error:
-                        LOG.error("ERROR: Unable to upload file, AWS returned an error.")
-
-                    # This will be sent back to SmartThings
-                    imageurl = "/{}/{}".format(self.s3bucket, s3filename)
-                    LOG.info("Setting last_image to https://s3.amazonaws.com%s", imageurl)
-                    self.camera_image['last_image'] = imageurl
-
-            if notify:
-                self.notify_hubs()
+                    self.notify_hubs()
+            except e:
+                LOG.info("ERROR: State error.")
+                reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+                return
 
         # Schedule next check
         reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
-        self.rawCapture.truncate(0)
+        try:
+            self.rawCapture.truncate(0)
+        except e:
+            LOG.info("ERROR: Truncate threw an error.")
+            reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
+            return
 
     def get_path(self, basepath, fileext, timestamp):
         # construct the file path
-        return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
+        return os.path.join(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
+        #return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
 
     def notify_hubs(self):
         """Notify the subscribed SmartThings hubs that a state change has occurred"""
@@ -359,17 +385,21 @@ class MonitorCamera(object):
         for subscription in self.subscription_list:
             LOG.info('Subscription: %s', subscription)
             if self.subscription_list[subscription]['expiration'] > time():
-                LOG.info("Notifying hub %s", subscription)
-                msg = '<msg><cmd>%s</cmd><usn>uuid:%s::%s</usn><imageurl>%s</imageurl></msg>' % (cmd, UUID, self.device_target, self.camera_image['last_image'])
-                body = StringProducer(bytes(msg, 'utf-8'))
-                agent = Agent(reactor)
-                req = agent.request(
-                    b'POST',
-                    bytes(subscription, 'utf-8'),
-                    Headers({'CONTENT-LENGTH': [str(len(msg))]}),
-                    body)
-                req.addCallback(self.handle_response)
-                req.addErrback(self.handle_error)
+                try:
+                    LOG.info("Notifying hub %s", subscription)
+                    msg = '<msg><cmd>%s</cmd><usn>uuid:%s::%s</usn><imageurl>%s</imageurl></msg>' % (cmd, UUID, self.device_target, self.camera_image['last_image'])
+                    body = StringProducer(bytes(msg, 'utf-8'))
+                    agent = Agent(reactor)
+                    req = agent.request(
+                        b'POST',
+                        bytes(subscription, 'utf-8'),
+                        Headers({'CONTENT-LENGTH': [str(len(msg))]}),
+                        body)
+                    req.addCallback(self.handle_response)
+                    req.addErrback(self.handle_error)
+                except e:
+                    LOG.info("ERROR: hub notification threw an error.")
+                    return
 
     def handle_response(self, response): # pylint: disable=no-self-use
         """Handle the SmartThings hub returning a status code to the POST.
