@@ -401,8 +401,7 @@ class MonitorCamera(object):
 
     def get_path(self, basepath, fileext, timestamp):
         # construct the file path
-        return os.path.join(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
-        #return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
+        return "{}/{}{}".format(basepath, timestamp.strftime("%Y-%m-%d-%H-%M-%S"), fileext)
 
     def notify_hubs(self):
         """Notify the subscribed SmartThings hubs that a state change has occurred"""
