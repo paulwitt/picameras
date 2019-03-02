@@ -252,7 +252,7 @@ class MonitorCamera(object):
         # grab the raw NumPy array representing the image
         try:
             frame = self.rawCapture.array
-        except e:
+        except:
             LOG.info("ERROR: Frame capture threw an error.")
             reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
             return
@@ -270,7 +270,7 @@ class MonitorCamera(object):
         try:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.GaussianBlur(gray, (21, 21), 0)
-        except e:
+        except:
             LOG.info("ERROR: Color change or blur threw an error.")
             reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
             return
@@ -281,7 +281,7 @@ class MonitorCamera(object):
             try:
                 self.rawCapture.truncate(0)
                 self.avg = gray.copy().astype("float")
-            except e:
+            except:
                 LOG.info("ERROR: Truncate threw an error.")
                 reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
                 return
@@ -353,7 +353,7 @@ class MonitorCamera(object):
 
                 if notify:
                     self.notify_hubs()
-            except e:
+            except:
                 LOG.info("ERROR: State error.")
                 reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
                 return
@@ -362,7 +362,7 @@ class MonitorCamera(object):
         reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
         try:
             self.rawCapture.truncate(0)
-        except e:
+        except:
             LOG.info("ERROR: Truncate threw an error.")
             reactor.callLater(self.polling_freq, self.check_state, current_state) # pylint: disable=no-member
             return
@@ -397,7 +397,7 @@ class MonitorCamera(object):
                         body)
                     req.addCallback(self.handle_response)
                     req.addErrback(self.handle_error)
-                except e:
+                except:
                     LOG.info("ERROR: hub notification threw an error.")
                     return
 
