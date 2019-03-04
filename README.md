@@ -48,7 +48,7 @@ Install on your Pi:
 * Set the python script to executable
 * Add this to your /etc/rc.local file: (sleep 10;python3 /home/pi/camera/smartthings-pi.py --conf /home/pi/camera/conf-pizero.json)&
 * Update the conf-pizero.json file with the 'basepath', 's3bucket', 's3folder', 'baseimageurl', and 'blankimage' for your local and s3 setup
-* Create and update /home/pi/.aws/config and /home/pi/.aws/credentials
+* Create and update /home/pi/.aws/credentials
 
 Notes:
 * This does log to /var/log/syslog
@@ -60,3 +60,7 @@ Known issues:
 * There's not enough error trapping around writing these files.
 * It seems to require a static IP on your Pi or it won't reconnect properly if there's a network issue or a crash.
 * The first image when it detects motion isn't the best image of the motion.
+
+Image cleanup:
+* Added a cleanup.py script that uses the same config as the main python script
+* Add it to crontab using 'sudo crontab -e' and schedule it to run every night
